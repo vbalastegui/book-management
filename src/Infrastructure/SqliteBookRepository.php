@@ -10,7 +10,7 @@ use PDOException;
 class SqliteBookRepository implements BookRepositoryInterface {
     private PDO $connection;
 
-    public function __construct(string $dbPath = '/data/books.sqlite') {
+    public function __construct(string $dbPath = '/var/www/html/data/books.sqlite') {
         try {
             $this->connection = new PDO("sqlite:$dbPath");
             $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

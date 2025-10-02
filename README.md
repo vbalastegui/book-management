@@ -27,6 +27,8 @@ composer install
 docker-compose up --build
 ```
 
+The application will be available at `http://localhost:8080`
+
 ## Running Tests
 ```bash
 docker-compose run app composer test

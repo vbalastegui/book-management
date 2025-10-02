@@ -30,6 +30,10 @@ COPY . .
 # Install project dependencies
 RUN composer install --no-interaction
 
+# Create data directory with proper permissions
+RUN mkdir -p /var/www/html/data && \
+    chmod 777 /var/www/html/data
+
 # Expose port 8000 for PHP built-in server (for development)
 EXPOSE 8000
 
