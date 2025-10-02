@@ -1,0 +1,57 @@
+# Composer
+/vendor/
+composer.lock
+
+# SQLite databases
+*.sqlite
+/data/*.sqlite
+
+# Logs
+/logs/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating System files
+.DS_Store
+Thumbs.db
+
+# Dependency directories
+node_modules/
+
+# PHPUnit
+/phpunit.xml
+.phpunit.result.cache
+
+# Docker
+.docker/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Compiled files
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Backup files
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp

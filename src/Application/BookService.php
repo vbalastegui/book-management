@@ -1,0 +1,84 @@
+<?php
+
+namespace BookManagement\Application;
+
+use BookManagement\Domain\Book;
+use BookManagement\Domain\BookRepositoryInterface;
+use BookManagement\Infrastructure\OpenLibraryApiService;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+class BookService {
+    private BookRepositoryInterface $bookRepository;
+    private OpenLibraryApiService $apiService;
+    private Logger $logger;
+
+    public function __construct(
+        BookRepositoryInterface $bookRepository, 
+        OpenLibraryApiService $apiService
+    ) {
+        $this->bookRepository = $bookRepository;
+        $this->apiService = $apiService;
+        $this->logger = new Logger('BookService');
+        $this->logger->pushHandler(new StreamHandler('/var/www/html/logs/bookservice.log', Logger::INFO));
+    }
+
+    public function createBook(array $bookData): Book {
+        // Fetch additional details from Open Library API
+        $apiDetails = $this->apiService->fetchBookDetails($bookData['isbn']);
+
+        $book = new Book(
+            null,
+            $bookData['title'],
+            $bookData['author'],
+            $bookData['isbn'],
+            $bookData['publication_year'],
+            $apiDetails['description'] ?? null
+        );
+
+        $this->logger->info("Creating book: {$book->getTitle()}");
+        return $this->bookRepository->create($book);
+    }
+
+    public function updateBook(int $id, array $bookData): Book {
+        $book = $this->bookRepository->findById($id);
+        
+        if (!$book) {
+            throw new \RuntimeException("Book not found");
+        }
+
+        // Update book details
+        $updatedBook = new Book(
+            $id,
+            $bookData['title'] ?? $book->getTitle(),
+            $bookData['author'] ?? $book->getAuthor(),
+            $bookData['isbn'] ?? $book->getIsbn(),
+            $bookData['publication_year'] ?? $book->getPublicationYear(),
+            $bookData['description'] ?? $book->getDescription()
+        );
+
+        $this->logger->info("Updating book: {$updatedBook->getTitle()}");
+        return $this->bookRepository->update($updatedBook);
+    }
+
+    public function deleteBook(int $id): bool {
+        $this->logger->info("Deleting book with ID: $id");
+        return $this->bookRepository->delete($id);
+    }
+
+    public function findBookById(int $id): ?Book {
+        return $this->bookRepository->findById($id);
+    }
+
+    public function findAllBooks(): array {
+        return $this->bookRepository->findAll();
+    }
+
+    public function searchBooksByTitle(string $title): array {
+        return $this->bookRepository->findByTitle($title);
+    }
+
+    public function searchBooksByAuthor(string $author): array {
+        return $this->bookRepository->findByAuthor($author);
+    }
+}
