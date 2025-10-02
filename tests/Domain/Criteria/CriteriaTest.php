@@ -23,7 +23,7 @@ class CriteriaTest extends TestCase {
 
     /** @test */
     public function it_can_be_created_with_filters(): void {
-        $filter = new Filter('title', FilterOperator::CONTAINS, 'Clean');
+        $filter = new Filter('field_name', FilterOperator::CONTAINS, 'value');
         $criteria = new Criteria([$filter]);
 
         $this->assertTrue($criteria->hasFilters());
@@ -33,8 +33,8 @@ class CriteriaTest extends TestCase {
 
     /** @test */
     public function it_can_be_created_with_multiple_filters(): void {
-        $filter1 = new Filter('title', FilterOperator::CONTAINS, 'Clean');
-        $filter2 = new Filter('author', FilterOperator::EQUAL, 'Martin');
+        $filter1 = new Filter('field1', FilterOperator::CONTAINS, 'value1');
+        $filter2 = new Filter('field2', FilterOperator::EQUAL, 'value2');
         $criteria = new Criteria([$filter1, $filter2]);
 
         $this->assertTrue($criteria->hasFilters());
@@ -43,7 +43,7 @@ class CriteriaTest extends TestCase {
 
     /** @test */
     public function it_can_be_created_with_order(): void {
-        $order = new Order('title', OrderType::ASC);
+        $order = new Order('field_name', OrderType::ASC);
         $criteria = new Criteria([], $order);
 
         $this->assertEquals($order, $criteria->order());
@@ -65,8 +65,8 @@ class CriteriaTest extends TestCase {
 
     /** @test */
     public function it_can_be_created_with_all_parameters(): void {
-        $filter = new Filter('title', FilterOperator::CONTAINS, 'Code');
-        $order = new Order('publication_year', OrderType::DESC);
+        $filter = new Filter('field_name', FilterOperator::CONTAINS, 'value');
+        $order = new Order('another_field', OrderType::DESC);
         $criteria = new Criteria([$filter], $order, 10, 5);
 
         $this->assertTrue($criteria->hasFilters());

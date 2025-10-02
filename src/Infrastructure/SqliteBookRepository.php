@@ -5,14 +5,21 @@ namespace BookManagement\Infrastructure;
 use BookManagement\Domain\Book;
 use BookManagement\Domain\BookRepositoryInterface;
 use BookManagement\Domain\Criteria\Criteria;
-use BookManagement\Domain\Criteria\FilterOperator;
+use BookManagement\Infrastructure\Persistence\OperatorStrategy;
+use BookManagement\Infrastructure\Persistence\Sql\SqlQueryBuilder;
+use BookManagement\Infrastructure\Persistence\Sql\Strategies\SqlEqualStrategy;
+use BookManagement\Infrastructure\Persistence\Sql\Strategies\SqlContainsStrategy;
+use BookManagement\Infrastructure\Persistence\Sql\Strategies\SqlGreaterThanStrategy;
+use BookManagement\Infrastructure\Persistence\Sql\Strategies\SqlLessThanStrategy;
 use PDO;
 use PDOException;
 
 class SqliteBookRepository implements BookRepositoryInterface {
     private PDO $connection;
+    private array $strategies;
 
     public function __construct(string $dbPath = '/var/www/html/data/books.sqlite') {
+        $this->initializeStrategies();
         try {
             $this->connection = new PDO("sqlite:$dbPath");
             $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -34,6 +41,15 @@ class SqliteBookRepository implements BookRepositoryInterface {
         $this->connection->exec($query);
     }
 
+    private function initializeStrategies(): void {
+        $this->strategies = [
+            new SqlEqualStrategy(),
+            new SqlContainsStrategy(),
+            new SqlGreaterThanStrategy(),
+            new SqlLessThanStrategy(),
+        ];
+    }
+
     public function findById(int $id): ?Book {
         $stmt = $this->connection->prepare("SELECT * FROM books WHERE id = :id");
         $stmt->execute(['id' => $id]);
@@ -43,47 +59,43 @@ class SqliteBookRepository implements BookRepositoryInterface {
     }
 
     public function findByCriteria(Criteria $criteria): array {
-        $query = "SELECT * FROM books";
-        $params = [];
+        $queryBuilder = new SqlQueryBuilder("SELECT * FROM books");
         
-        if ($criteria->hasFilters()) {
-            $whereClauses = [];
-            foreach ($criteria->filters() as $filter) {
-                $field = $filter->field();
-                $operator = $filter->operator();
-                $value = $filter->value();
-                $paramName = $field . '_' . count($params);
-                
-                if ($operator === FilterOperator::CONTAINS) {
-                    $whereClauses[] = "$field LIKE :$paramName";
-                    $params[$paramName] = "%$value%";
-                } elseif ($operator === FilterOperator::EQUAL) {
-                    $whereClauses[] = "$field = :$paramName";
-                    $params[$paramName] = $value;
-                } else {
-                    $whereClauses[] = "$field {$operator->value} :$paramName";
-                    $params[$paramName] = $value;
-                }
-            }
-            $query .= " WHERE " . implode(" AND ", $whereClauses);
+        foreach ($criteria->filters() as $filter) {
+            $this->applyFilter($filter, $queryBuilder);
         }
         
         if ($criteria->order()) {
-            $query .= " ORDER BY {$criteria->order()->orderBy()} {$criteria->order()->orderType()->value}";
+            $queryBuilder->setOrder(
+                $criteria->order()->orderBy(),
+                $criteria->order()->orderType()->value
+            );
         }
         
         if ($criteria->limit()) {
-            $query .= " LIMIT {$criteria->limit()}";
+            $queryBuilder->setLimit($criteria->limit());
         }
         
         if ($criteria->offset()) {
-            $query .= " OFFSET {$criteria->offset()}";
+            $queryBuilder->setOffset($criteria->offset());
         }
         
-        $stmt = $this->connection->prepare($query);
-        $stmt->execute($params);
+        $result = $queryBuilder->build();
+        $stmt = $this->connection->prepare($result['sql']);
+        $stmt->execute($result['params']);
         
         return array_map([$this, 'mapToBook'], $stmt->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    private function applyFilter($filter, $queryBuilder): void {
+        foreach ($this->strategies as $strategy) {
+            if ($strategy->supports($filter->operator())) {
+                $strategy->apply($filter, $queryBuilder);
+                return;
+            }
+        }
+        
+        throw new \RuntimeException("No strategy found for operator: {$filter->operator()->value}");
     }
 
     public function create(Book $book): Book {
