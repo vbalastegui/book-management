@@ -11,12 +11,14 @@ use Monolog\Handler\StreamHandler;
 class OpenLibraryApiService {
     private Client $client;
     private LoggerInterface $logger;
+    private OpenLibraryResponseParser $parser;
     private const BASE_URL = 'https://openlibrary.org/api/books';
 
-    public function __construct() {
+    public function __construct(?OpenLibraryResponseParser $parser = null) {
         $this->client = new Client();
         $this->logger = new Logger('OpenLibraryApiService');
         $this->logger->pushHandler(new StreamHandler('/var/www/html/logs/openlibrary.log', Logger::INFO));
+        $this->parser = $parser ?? new OpenLibraryResponseParser();
     }
 
     public function fetchBookDetails(string $isbn): ?array {
@@ -44,28 +46,9 @@ class OpenLibraryApiService {
                 return null;
             }
 
-            // Build description from available fields
-            $description = null;
-            if (isset($bookData['description'])) {
-                $description = is_array($bookData['description']) 
-                    ? $bookData['description']['value'] 
-                    : $bookData['description'];
-            } elseif (isset($bookData['notes'])) {
-                $description = is_array($bookData['notes']) 
-                    ? $bookData['notes']['value'] 
-                    : $bookData['notes'];
-            } elseif (isset($bookData['subtitle'])) {
-                $description = $bookData['subtitle'];
-            }
-
             $this->logger->info("Successfully fetched book details for ISBN: $isbn");
 
-            return [
-                'title' => $bookData['title'] ?? null,
-                'author' => $bookData['authors'][0]['name'] ?? null,
-                'description' => $description,
-                'cover' => $bookData['cover']['large'] ?? null
-            ];
+            return $this->parser->parseBookData($bookData);
         } catch (RequestException $e) {
             $this->logger->error("API request failed: " . $e->getMessage());
             return null;
