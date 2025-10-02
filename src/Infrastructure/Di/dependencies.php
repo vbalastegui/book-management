@@ -1,6 +1,7 @@
 <?php
 
 use BookManagement\Application\BookService;
+use BookManagement\Application\BookApiServiceInterface;
 use BookManagement\Domain\BookRepositoryInterface;
 use BookManagement\Infrastructure\SqliteBookRepository;
 use BookManagement\Infrastructure\OpenLibraryApiService;
@@ -14,7 +15,7 @@ return [
         return new SqliteBookRepository('/var/www/html/data/books.sqlite');
     },
 
-    OpenLibraryApiService::class => function (ContainerInterface $c) {
+    BookApiServiceInterface::class => function (ContainerInterface $c) {
         return new OpenLibraryApiService();
     },
 
@@ -29,7 +30,7 @@ return [
     BookService::class => function (ContainerInterface $c) {
         return new BookService(
             $c->get(BookRepositoryInterface::class),
-            $c->get(OpenLibraryApiService::class),
+            $c->get(BookApiServiceInterface::class),
             $c->get(Logger::class)
         );
     },

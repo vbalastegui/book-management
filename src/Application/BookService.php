@@ -7,17 +7,16 @@ use BookManagement\Domain\BookRepositoryInterface;
 use BookManagement\Domain\Criteria\Criteria;
 use BookManagement\Domain\Criteria\Filter;
 use BookManagement\Domain\Criteria\FilterOperator;
-use BookManagement\Infrastructure\OpenLibraryApiService;
 use Psr\Log\LoggerInterface;
 
 class BookService {
     private BookRepositoryInterface $bookRepository;
-    private OpenLibraryApiService $apiService;
+    private BookApiServiceInterface $apiService;
     private LoggerInterface $logger;
 
     public function __construct(
         BookRepositoryInterface $bookRepository, 
-        OpenLibraryApiService $apiService,
+        BookApiServiceInterface $apiService,
         LoggerInterface $logger
     ) {
         $this->bookRepository = $bookRepository;

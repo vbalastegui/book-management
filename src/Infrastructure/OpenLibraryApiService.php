@@ -2,13 +2,14 @@
 
 namespace BookManagement\Infrastructure;
 
+use BookManagement\Application\BookApiServiceInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LoggerInterface;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
-class OpenLibraryApiService {
+class OpenLibraryApiService implements BookApiServiceInterface {
     private Client $client;
     private LoggerInterface $logger;
     private OpenLibraryResponseParser $parser;

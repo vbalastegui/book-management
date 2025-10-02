@@ -4,6 +4,7 @@ namespace BookManagement\Tests\Acceptance;
 
 use PHPUnit\Framework\TestCase;
 use BookManagement\Application\BookService;
+use BookManagement\Application\BookApiServiceInterface;
 use BookManagement\Infrastructure\SqliteBookRepository;
 use BookManagement\Infrastructure\OpenLibraryApiService;
 use Monolog\Logger;
