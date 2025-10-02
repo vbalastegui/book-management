@@ -5,3 +5,4 @@ services:
       - "8080:8000"
     volumes:
       - .:/var/www/html
+      - ./logs:/var/www/html/logs
