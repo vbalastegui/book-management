@@ -2,7 +2,7 @@
 
 namespace BookManagement\Domain;
 
-class Book {
+class Book implements \JsonSerializable {
     private ?int $id;
     private string $title;
     private string $author;
@@ -54,5 +54,21 @@ class Book {
     // Setters
     public function setDescription(?string $description): void {
         $this->description = $description;
+    }
+
+    // Serialization
+    public function toArray(): array {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'author' => $this->author,
+            'isbn' => $this->isbn,
+            'publication_year' => $this->publicationYear,
+            'description' => $this->description
+        ];
+    }
+
+    public function jsonSerialize(): mixed {
+        return $this->toArray();
     }
 }
