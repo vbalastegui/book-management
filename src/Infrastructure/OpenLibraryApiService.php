@@ -44,10 +44,26 @@ class OpenLibraryApiService {
                 return null;
             }
 
+            // Build description from available fields
+            $description = null;
+            if (isset($bookData['description'])) {
+                $description = is_array($bookData['description']) 
+                    ? $bookData['description']['value'] 
+                    : $bookData['description'];
+            } elseif (isset($bookData['notes'])) {
+                $description = is_array($bookData['notes']) 
+                    ? $bookData['notes']['value'] 
+                    : $bookData['notes'];
+            } elseif (isset($bookData['subtitle'])) {
+                $description = $bookData['subtitle'];
+            }
+
+            $this->logger->info("Successfully fetched book details for ISBN: $isbn");
+
             return [
                 'title' => $bookData['title'] ?? null,
                 'author' => $bookData['authors'][0]['name'] ?? null,
-                'description' => $bookData['description'] ?? null,
+                'description' => $description,
                 'cover' => $bookData['cover']['large'] ?? null
             ];
         } catch (RequestException $e) {
