@@ -8,22 +8,21 @@ use BookManagement\Domain\Criteria\Criteria;
 use BookManagement\Domain\Criteria\Filter;
 use BookManagement\Domain\Criteria\FilterOperator;
 use BookManagement\Infrastructure\OpenLibraryApiService;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
+use Psr\Log\LoggerInterface;
 
 class BookService {
     private BookRepositoryInterface $bookRepository;
     private OpenLibraryApiService $apiService;
-    private Logger $logger;
+    private LoggerInterface $logger;
 
     public function __construct(
         BookRepositoryInterface $bookRepository, 
-        OpenLibraryApiService $apiService
+        OpenLibraryApiService $apiService,
+        LoggerInterface $logger
     ) {
         $this->bookRepository = $bookRepository;
         $this->apiService = $apiService;
-        $this->logger = new Logger('BookService');
-        $this->logger->pushHandler(new StreamHandler('/var/www/html/logs/bookservice.log', Logger::INFO));
+        $this->logger = $logger;
     }
 
     public function createBook(array $bookData): Book {

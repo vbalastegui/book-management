@@ -6,6 +6,8 @@ use PHPUnit\Framework\TestCase;
 use BookManagement\Application\BookService;
 use BookManagement\Infrastructure\SqliteBookRepository;
 use BookManagement\Infrastructure\OpenLibraryApiService;
+use Monolog\Logger;
+use Monolog\Handler\NullHandler;
 
 /**
  * Acceptance Test: Book Management
@@ -21,7 +23,9 @@ class BookManagementTest extends TestCase {
         
         $repository = new SqliteBookRepository($this->testDbPath);
         $apiService = new OpenLibraryApiService();
-        $this->bookService = new BookService($repository, $apiService);
+        $logger = new Logger('Test');
+        $logger->pushHandler(new NullHandler());
+        $this->bookService = new BookService($repository, $apiService, $logger);
     }
 
     protected function tearDown(): void {
