@@ -29,7 +29,9 @@ try {
                 $books = $bookService->searchBooksByAuthor($_GET['author']);
                 echo json_encode($books, JSON_PRETTY_PRINT);
             } else {
-                $books = $bookService->findAllBooks();
+                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 100;
+                $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+                $books = $bookService->findAllBooks($limit, $offset);
                 echo json_encode($books, JSON_PRETTY_PRINT);
             }
             break;

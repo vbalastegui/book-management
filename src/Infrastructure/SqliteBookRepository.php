@@ -4,6 +4,8 @@ namespace BookManagement\Infrastructure;
 
 use BookManagement\Domain\Book;
 use BookManagement\Domain\BookRepositoryInterface;
+use BookManagement\Domain\Criteria\Criteria;
+use BookManagement\Domain\Criteria\FilterOperator;
 use PDO;
 use PDOException;
 
@@ -40,20 +42,47 @@ class SqliteBookRepository implements BookRepositoryInterface {
         return $data ? $this->mapToBook($data) : null;
     }
 
-    public function findAll(): array {
-        $stmt = $this->connection->query("SELECT * FROM books");
-        return array_map([$this, 'mapToBook'], $stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-
-    public function findByTitle(string $title): array {
-        $stmt = $this->connection->prepare("SELECT * FROM books WHERE title LIKE :title");
-        $stmt->execute(['title' => "%$title%"]);
-        return array_map([$this, 'mapToBook'], $stmt->fetchAll(PDO::FETCH_ASSOC));
-    }
-
-    public function findByAuthor(string $author): array {
-        $stmt = $this->connection->prepare("SELECT * FROM books WHERE author LIKE :author");
-        $stmt->execute(['author' => "%$author%"]);
+    public function findByCriteria(Criteria $criteria): array {
+        $query = "SELECT * FROM books";
+        $params = [];
+        
+        if ($criteria->hasFilters()) {
+            $whereClauses = [];
+            foreach ($criteria->filters() as $filter) {
+                $field = $filter->field();
+                $operator = $filter->operator();
+                $value = $filter->value();
+                $paramName = $field . '_' . count($params);
+                
+                if ($operator === FilterOperator::CONTAINS) {
+                    $whereClauses[] = "$field LIKE :$paramName";
+                    $params[$paramName] = "%$value%";
+                } elseif ($operator === FilterOperator::EQUAL) {
+                    $whereClauses[] = "$field = :$paramName";
+                    $params[$paramName] = $value;
+                } else {
+                    $whereClauses[] = "$field {$operator->value} :$paramName";
+                    $params[$paramName] = $value;
+                }
+            }
+            $query .= " WHERE " . implode(" AND ", $whereClauses);
+        }
+        
+        if ($criteria->order()) {
+            $query .= " ORDER BY {$criteria->order()->orderBy()} {$criteria->order()->orderType()->value}";
+        }
+        
+        if ($criteria->limit()) {
+            $query .= " LIMIT {$criteria->limit()}";
+        }
+        
+        if ($criteria->offset()) {
+            $query .= " OFFSET {$criteria->offset()}";
+        }
+        
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute($params);
+        
         return array_map([$this, 'mapToBook'], $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 

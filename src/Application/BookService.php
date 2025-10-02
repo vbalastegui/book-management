@@ -4,6 +4,9 @@ namespace BookManagement\Application;
 
 use BookManagement\Domain\Book;
 use BookManagement\Domain\BookRepositoryInterface;
+use BookManagement\Domain\Criteria\Criteria;
+use BookManagement\Domain\Criteria\Filter;
+use BookManagement\Domain\Criteria\FilterOperator;
 use BookManagement\Infrastructure\OpenLibraryApiService;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
@@ -70,15 +73,22 @@ class BookService {
         return $this->bookRepository->findById($id);
     }
 
-    public function findAllBooks(): array {
-        return $this->bookRepository->findAll();
+    public function findAllBooks(?int $limit = 100, ?int $offset = 0): array {
+        $criteria = new Criteria([], null, $limit, $offset);
+        return $this->bookRepository->findByCriteria($criteria);
     }
 
     public function searchBooksByTitle(string $title): array {
-        return $this->bookRepository->findByTitle($title);
+        $criteria = new Criteria([
+            new Filter('title', FilterOperator::CONTAINS, $title)
+        ]);
+        return $this->bookRepository->findByCriteria($criteria);
     }
 
     public function searchBooksByAuthor(string $author): array {
-        return $this->bookRepository->findByAuthor($author);
+        $criteria = new Criteria([
+            new Filter('author', FilterOperator::CONTAINS, $author)
+        ]);
+        return $this->bookRepository->findByCriteria($criteria);
     }
 }
