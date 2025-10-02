@@ -21,10 +21,13 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "BookManagement\\Tests\\": "src/Tests/"
+            "BookManagement\\Tests\\": "tests/"
         }
     },
     "scripts": {
-        "test": "phpunit src/Tests"
+        "test": "phpunit",
+        "test:acceptance": "phpunit --testsuite 'Acceptance Tests'",
+        "test:unit": "phpunit --testsuite 'Unit Tests'",
+        "test:integration": "phpunit --testsuite 'Integration Tests'"
     }
 }
