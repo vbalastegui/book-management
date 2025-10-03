@@ -151,8 +151,9 @@ class BookApiTest extends TestCase {
 
         $this->assertEquals(204, $response['status']);
         $this->assertNull($response['body']);
+        
         $getResponse = $this->httpRequest('GET', "/books/{$bookId}");
-        $this->assertEquals(200, $getResponse['status']);
+        $this->assertEquals(404, $getResponse['status']);
         $this->assertIsArray($getResponse['body']);
         $this->assertArrayHasKey('error', $getResponse['body']);
     }
