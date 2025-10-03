@@ -22,6 +22,17 @@ class BookApiTest extends TestCase {
             'timeout' => 10
         ]);
     }
+    
+    protected function tearDown(): void {
+        $this->cleanDatabase();
+    }
+    
+    private function cleanDatabase(): void {
+        $dbPath = __DIR__ . '/../../data/books_test.sqlite';
+        if (file_exists($dbPath)) {
+            unlink($dbPath);
+        }
+    }
 
     /** @test */
     public function user_can_create_a_book_via_api(): void {

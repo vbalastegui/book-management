@@ -6,3 +6,5 @@ services:
     volumes:
       - .:/var/www/html
       - ./logs:/var/www/html/logs
+    environment:
+      - DB_PATH=/var/www/html/data/books.sqlite

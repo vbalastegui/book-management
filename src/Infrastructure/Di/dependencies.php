@@ -12,7 +12,8 @@ use Monolog\Handler\StreamHandler;
 
 return [
     BookRepositoryInterface::class => function (ContainerInterface $c) {
-        return new SqliteBookRepository('/var/www/html/data/books.sqlite');
+        $config = require __DIR__ . '/../../../config/database.php';
+        return new SqliteBookRepository($config['path']);
     },
 
     BookApiServiceInterface::class => function (ContainerInterface $c) {
