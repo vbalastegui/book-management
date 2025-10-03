@@ -22,24 +22,13 @@ class BookApiTest extends TestCase {
             'timeout' => 10
         ]);
     }
-    
-    protected function tearDown(): void {
-        $this->cleanDatabase();
-    }
-    
-    private function cleanDatabase(): void {
-        $dbPath = __DIR__ . '/../../data/books_test.sqlite';
-        if (file_exists($dbPath)) {
-            unlink($dbPath);
-        }
-    }
 
     /** @test */
     public function user_can_create_a_book_via_api(): void {
         $bookData = [
             'title' => 'Clean Code',
             'author' => 'Robert C. Martin',
-            'isbn' => '0132350882',
+            'isbn' => 'ISBN-' . uniqid(),
             'publication_year' => 2008
         ];
 
@@ -64,7 +53,7 @@ class BookApiTest extends TestCase {
         $this->httpRequest('POST', '/books', [
             'title' => '1984',
             'author' => 'George Orwell',
-            'isbn' => '0451524934',
+            'isbn' => 'ISBN-' . uniqid(),
             'publication_year' => 1949
         ]);
 
@@ -80,7 +69,7 @@ class BookApiTest extends TestCase {
         $this->httpRequest('POST', '/books', [
             'title' => 'Clean Architecture',
             'author' => 'Robert C. Martin',
-            'isbn' => '0134494164',
+            'isbn' => 'ISBN-' . uniqid(),
             'publication_year' => 2017
         ]);
 
@@ -97,7 +86,7 @@ class BookApiTest extends TestCase {
         $this->httpRequest('POST', '/books', [
             'title' => 'The Pragmatic Programmer',
             'author' => 'Andy Hunt',
-            'isbn' => '020161622X',
+            'isbn' => 'ISBN-' . uniqid(),
             'publication_year' => 1999
         ]);
 
@@ -114,7 +103,7 @@ class BookApiTest extends TestCase {
         $createResponse = $this->httpRequest('POST', '/books', [
             'title' => 'Design Patterns',
             'author' => 'Gang of Four',
-            'isbn' => '0201633612',
+            'isbn' => 'ISBN-' . uniqid(),
             'publication_year' => 1994
         ]);
 
@@ -132,7 +121,7 @@ class BookApiTest extends TestCase {
         $createResponse = $this->httpRequest('POST', '/books', [
             'title' => 'Original Title',
             'author' => 'Original Author',
-            'isbn' => '1234567890',
+            'isbn' => 'ISBN-' . uniqid(),
             'publication_year' => 2020
         ]);
 
@@ -152,7 +141,7 @@ class BookApiTest extends TestCase {
         $createResponse = $this->httpRequest('POST', '/books', [
             'title' => 'Book to Delete',
             'author' => 'Test Author',
-            'isbn' => '9999999999',
+            'isbn' => 'ISBN-' . uniqid(),
             'publication_year' => 2023
         ]);
 
@@ -174,7 +163,7 @@ class BookApiTest extends TestCase {
             $this->httpRequest('POST', '/books', [
                 'title' => "Book $i",
                 'author' => "Author $i",
-                'isbn' => "ISBN00000$i",
+                'isbn' => 'ISBN-' . uniqid(),
                 'publication_year' => 2020 + $i
             ]);
         }

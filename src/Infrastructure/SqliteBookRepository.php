@@ -12,14 +12,9 @@ use PDOException;
 class SqliteBookRepository implements BookRepositoryInterface {
     private PDO $connection;
 
-    public function __construct(string $dbPath = '/var/www/html/data/books.sqlite') {
-        try {
-            $this->connection = new PDO("sqlite:$dbPath");
-            $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->createTable();
-        } catch (PDOException $e) {
-            throw new \RuntimeException("Database connection failed: " . $e->getMessage());
-        }
+    public function __construct(PDO $connection) {
+        $this->connection = $connection;
+        $this->createTable();
     }
 
     private function createTable(): void {

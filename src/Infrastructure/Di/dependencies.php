@@ -9,11 +9,18 @@ use BookManagement\Infrastructure\Http\BookController;
 use Psr\Container\ContainerInterface;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use PDO;
 
 return [
-    BookRepositoryInterface::class => function (ContainerInterface $c) {
+    PDO::class => function (ContainerInterface $c) {
         $config = require __DIR__ . '/../../../config/database.php';
-        return new SqliteBookRepository($config['path']);
+        $pdo = new PDO("sqlite:{$config['path']}");
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        return $pdo;
+    },
+
+    BookRepositoryInterface::class => function (ContainerInterface $c) {
+        return new SqliteBookRepository($c->get(PDO::class));
     },
 
     BookApiServiceInterface::class => function (ContainerInterface $c) {
