@@ -56,11 +56,16 @@ class BookController {
                 ->withHeader('Content-Type', 'application/json')
                 ->withHeader('Location', "/books/{$book->getId()}")
                 ->withStatus(201);
-        } catch (\Exception $e) {
+        } catch (\InvalidArgumentException $e) {
             $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
             return $response
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus(400);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(500);
         }
     }
 
@@ -73,11 +78,21 @@ class BookController {
             
             $response->getBody()->write(json_encode($book, JSON_PRETTY_PRINT));
             return $response->withHeader('Content-Type', 'application/json');
-        } catch (\Exception $e) {
+        } catch (\RuntimeException $e) {
             $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
             return $response
                 ->withHeader('Content-Type', 'application/json')
                 ->withStatus(404);
+        } catch (\InvalidArgumentException $e) {
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(400);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(500);
         }
     }
 

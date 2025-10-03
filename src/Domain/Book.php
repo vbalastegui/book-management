@@ -6,7 +6,7 @@ class Book implements \JsonSerializable {
     private ?int $id;
     private string $title;
     private string $author;
-    private string $isbn;
+    private BookIsbn $isbn;
     private int $publicationYear;
     private ?string $description;
 
@@ -14,7 +14,7 @@ class Book implements \JsonSerializable {
         ?int $id,
         string $title,
         string $author,
-        string $isbn,
+        BookIsbn $isbn,
         int $publicationYear,
         ?string $description = null
     ) {
@@ -39,7 +39,7 @@ class Book implements \JsonSerializable {
         return $this->author;
     }
 
-    public function getIsbn(): string {
+    public function getIsbn(): BookIsbn {
         return $this->isbn;
     }
 
@@ -62,7 +62,7 @@ class Book implements \JsonSerializable {
             'id' => $this->id,
             'title' => $this->title,
             'author' => $this->author,
-            'isbn' => $this->isbn,
+            'isbn' => $this->isbn->value(),
             'publication_year' => $this->publicationYear,
             'description' => $this->description
         ];

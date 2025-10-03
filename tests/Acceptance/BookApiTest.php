@@ -49,6 +49,35 @@ class BookApiTest extends TestCase {
     }
 
     /** @test */
+    public function user_cannot_create_book_with_missing_required_fields(): void {
+        $bookData = [
+            'title' => 'Incomplete Book'
+        ];
+
+        $response = $this->httpRequest('POST', '/books', $bookData);
+
+        $this->assertEquals(400, $response['status']);
+        $this->assertIsArray($response['body']);
+        $this->assertArrayHasKey('error', $response['body']);
+    }
+
+    /** @test */
+    public function user_cannot_create_book_with_empty_isbn(): void {
+        $bookData = [
+            'title' => 'Test Book',
+            'author' => 'Test Author',
+            'isbn' => '',
+            'publication_year' => 2024
+        ];
+
+        $response = $this->httpRequest('POST', '/books', $bookData);
+
+        $this->assertEquals(400, $response['status']);
+        $this->assertIsArray($response['body']);
+        $this->assertArrayHasKey('error', $response['body']);
+    }
+
+    /** @test */
     public function user_can_list_all_books_via_api(): void {
         $this->httpRequest('POST', '/books', [
             'title' => '1984',

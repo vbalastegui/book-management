@@ -3,6 +3,7 @@
 namespace BookManagement\Application;
 
 use BookManagement\Domain\Book;
+use BookManagement\Domain\BookIsbn;
 use BookManagement\Domain\BookRepositoryInterface;
 use BookManagement\Domain\Criteria\Criteria;
 use BookManagement\Domain\Criteria\Filter;
@@ -25,14 +26,16 @@ class BookService {
     }
 
     public function createBook(array $bookData): Book {
+        $isbn = new BookIsbn($bookData['isbn']);
+        
         // Fetch additional details from Open Library API
-        $apiDetails = $this->apiService->fetchBookDetails($bookData['isbn']);
+        $apiDetails = $this->apiService->fetchBookDetails($isbn->value());
 
         $book = new Book(
             null,
             $bookData['title'],
             $bookData['author'],
-            $bookData['isbn'],
+            $isbn,
             $bookData['publication_year'],
             $apiDetails['description'] ?? null
         );
@@ -53,7 +56,7 @@ class BookService {
             $id,
             $bookData['title'] ?? $book->getTitle(),
             $bookData['author'] ?? $book->getAuthor(),
-            $bookData['isbn'] ?? $book->getIsbn(),
+            isset($bookData['isbn']) ? new BookIsbn($bookData['isbn']) : $book->getIsbn(),
             $bookData['publication_year'] ?? $book->getPublicationYear(),
             $bookData['description'] ?? $book->getDescription()
         );

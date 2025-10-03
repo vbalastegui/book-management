@@ -3,6 +3,7 @@
 namespace BookManagement\Infrastructure;
 
 use BookManagement\Domain\Book;
+use BookManagement\Domain\BookIsbn;
 use BookManagement\Domain\BookRepositoryInterface;
 use BookManagement\Domain\Criteria\Criteria;
 use BookManagement\Domain\Criteria\FilterOperator;
@@ -139,7 +140,7 @@ class SqliteBookRepository implements BookRepositoryInterface {
             (int)$data['id'],
             $data['title'],
             $data['author'],
-            $data['isbn'],
+            new BookIsbn($data['isbn']),
             (int)$data['publication_year'],
             $data['description'] ?? null
         );
