@@ -54,6 +54,7 @@ class BookController {
             $response->getBody()->write(json_encode($book, JSON_PRETTY_PRINT));
             return $response
                 ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Location', "/books/{$book->getId()}")
                 ->withStatus(201);
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
