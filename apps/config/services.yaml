@@ -5,9 +5,14 @@ services:
 
     BookManagement\:
         resource: '../../src/*'
-        exclude: '../../src/{Domain,Tests}'
+        exclude: '../../src/Domain'
+
+    App\Controller\BookController:
+        public: true
+        tags: ['controller.service_arguments']
 
     PDO:
+        class: PDO
         factory: ['@BookManagement\Infrastructure\Factory\PDOFactory', 'create']
 
     BookManagement\Domain\BookRepositoryInterface:

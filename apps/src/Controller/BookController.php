@@ -1,6 +1,6 @@
 <?php
 
-namespace BookManagement\Infrastructure\Http;
+namespace App\Controller;
 
 use BookManagement\Application\BookService;
 use Symfony\Component\HttpFoundation\Request;

@@ -1,25 +1,29 @@
-books_index:
-    path: /books
-    controller: BookManagement\Infrastructure\Http\BookController::index
-    methods: [GET]
+controllers:
+    resource: '../src/Controller/'
+    type: attribute
 
-books_show:
+api_books_index:
+    path: /books
+    methods: [GET]
+    controller: App\Controller\BookController::index
+
+api_books_show:
     path: /books/{id}
-    controller: BookManagement\Infrastructure\Http\BookController::show
     methods: [GET]
+    controller: App\Controller\BookController::show
 
-books_create:
+api_books_create:
     path: /books
-    controller: BookManagement\Infrastructure\Http\BookController::create
     methods: [POST]
+    controller: App\Controller\BookController::create
 
-books_update:
+api_books_update:
     path: /books/{id}
-    controller: BookManagement\Infrastructure\Http\BookController::update
     methods: [PUT]
+    controller: App\Controller\BookController::update
 
-books_delete:
+api_books_delete:
     path: /books/{id}
-    controller: BookManagement\Infrastructure\Http\BookController::delete
     methods: [DELETE]
+    controller: App\Controller\BookController::delete
 

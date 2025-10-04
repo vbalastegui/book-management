@@ -1,6 +1,4 @@
 framework:
-    secret: '%env(APP_SECRET)%'
-    router:
-        resource: '../routes.yaml'
+    secret: 'ThisIsASecretKey'
     http_method_override: false
 
