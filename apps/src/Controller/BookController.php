@@ -43,7 +43,25 @@ class BookController {
     }
 
     public function create(Request $request): Response {
-        $data = $request->toArray();
+        // Check if the request is JSON
+        $contentType = $request->headers->get('Content-Type');
+        
+        if (strpos($contentType, 'application/json') !== false) {
+            $data = json_decode($request->getContent(), true);
+        } else {
+            $data = $request->request->all();
+        }
+        
+        // Validate required fields
+        $requiredFields = ['title', 'author', 'isbn', 'publication_year'];
+        foreach ($requiredFields as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                return new JsonResponse(
+                    ['error' => "Missing or empty required field: $field"], 
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+        }
         
         try {
             $book = $this->bookService->createBook($data);
@@ -51,10 +69,11 @@ class BookController {
             $response = new JsonResponse($book->toArray(), Response::HTTP_CREATED);
             $response->headers->set('Location', "/books/{$book->getId()}");
             return $response;
-        } catch (\InvalidArgumentException $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(
+                ['error' => $e->getMessage()], 
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 
