@@ -28,17 +28,18 @@ class BookController {
             $books = $this->bookService->findAllBooks($limit, $offset);
         }
         
-        return new JsonResponse($books, Response::HTTP_OK, [], JSON_PRETTY_PRINT);
+        $booksArray = array_map(fn($book) => $book->toArray(), $books);
+        return new JsonResponse($booksArray, Response::HTTP_OK);
     }
 
     public function show(Request $request, int $id): Response {
         $book = $this->bookService->findBookById($id);
 
         if (!$book) {
-            return new JsonResponse(['error' => 'Book not found'], Response::HTTP_NOT_FOUND, [], JSON_PRETTY_PRINT);
+            return new JsonResponse(['error' => 'Book not found'], Response::HTTP_NOT_FOUND);
         }
 
-        return new JsonResponse($book, Response::HTTP_OK, [], JSON_PRETTY_PRINT);
+        return new JsonResponse($book->toArray(), Response::HTTP_OK);
     }
 
     public function create(Request $request): Response {
@@ -47,13 +48,13 @@ class BookController {
         try {
             $book = $this->bookService->createBook($data);
             
-            $response = new JsonResponse($book, Response::HTTP_CREATED, [], JSON_PRETTY_PRINT);
+            $response = new JsonResponse($book->toArray(), Response::HTTP_CREATED);
             $response->headers->set('Location', "/books/{$book->getId()}");
             return $response;
         } catch (\InvalidArgumentException $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST, [], JSON_PRETTY_PRINT);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR, [], JSON_PRETTY_PRINT);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -63,13 +64,13 @@ class BookController {
         try {
             $book = $this->bookService->updateBook($id, $data);
             
-            return new JsonResponse($book, Response::HTTP_OK, [], JSON_PRETTY_PRINT);
+            return new JsonResponse($book->toArray(), Response::HTTP_OK);
         } catch (\RuntimeException $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND, [], JSON_PRETTY_PRINT);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (\InvalidArgumentException $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST, [], JSON_PRETTY_PRINT);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR, [], JSON_PRETTY_PRINT);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
