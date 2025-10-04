@@ -3,8 +3,9 @@
 namespace BookManagement\Infrastructure\Http;
 
 use BookManagement\Application\BookService;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class BookController {
     private BookService $bookService;
@@ -13,96 +14,69 @@ class BookController {
         $this->bookService = $bookService;
     }
 
-    public function index(Request $request, Response $response): Response {
-        $params = $request->getQueryParams();
-        $limit = isset($params['limit']) ? (int)$params['limit'] : 100;
-        $offset = isset($params['offset']) ? (int)$params['offset'] : 0;
+    public function index(Request $request): Response {
+        $limit = $request->query->getInt('limit', 100);
+        $offset = $request->query->getInt('offset', 0);
+        $title = $request->query->get('title');
+        $author = $request->query->get('author');
 
-        if (isset($params['title'])) {
-            $books = $this->bookService->searchBooksByTitle($params['title']);
-        } elseif (isset($params['author'])) {
-            $books = $this->bookService->searchBooksByAuthor($params['author']);
+        if ($title) {
+            $books = $this->bookService->searchBooksByTitle($title);
+        } elseif ($author) {
+            $books = $this->bookService->searchBooksByAuthor($author);
         } else {
             $books = $this->bookService->findAllBooks($limit, $offset);
         }
         
-        $response->getBody()->write(json_encode($books, JSON_PRETTY_PRINT));
-        return $response->withHeader('Content-Type', 'application/json');
+        return new JsonResponse($books, Response::HTTP_OK, [], JSON_PRETTY_PRINT);
     }
 
-    public function show(Request $request, Response $response, array $args): Response {
-        $id = (int)$args['id'];
+    public function show(Request $request, int $id): Response {
         $book = $this->bookService->findBookById($id);
 
         if (!$book) {
-            $response->getBody()->write(json_encode(['error' => 'Book not found'], JSON_PRETTY_PRINT));
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(404);
+            return new JsonResponse(['error' => 'Book not found'], Response::HTTP_NOT_FOUND, [], JSON_PRETTY_PRINT);
         }
 
-        $response->getBody()->write(json_encode($book, JSON_PRETTY_PRINT));
-        return $response->withHeader('Content-Type', 'application/json');
+        return new JsonResponse($book, Response::HTTP_OK, [], JSON_PRETTY_PRINT);
     }
 
-    public function create(Request $request, Response $response): Response {
-        $data = json_decode($request->getBody()->getContents(), true);
+    public function create(Request $request): Response {
+        $data = $request->toArray();
         
         try {
             $book = $this->bookService->createBook($data);
             
-            $response->getBody()->write(json_encode($book, JSON_PRETTY_PRINT));
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Location', "/books/{$book->getId()}")
-                ->withStatus(201);
+            $response = new JsonResponse($book, Response::HTTP_CREATED, [], JSON_PRETTY_PRINT);
+            $response->headers->set('Location', "/books/{$book->getId()}");
+            return $response;
         } catch (\InvalidArgumentException $e) {
-            $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(400);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST, [], JSON_PRETTY_PRINT);
         } catch (\Exception $e) {
-            $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(500);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR, [], JSON_PRETTY_PRINT);
         }
     }
 
-    public function update(Request $request, Response $response, array $args): Response {
-        $id = (int)$args['id'];
-        $data = json_decode($request->getBody()->getContents(), true);
+    public function update(Request $request, int $id): Response {
+        $data = $request->toArray();
 
         try {
             $book = $this->bookService->updateBook($id, $data);
             
-            $response->getBody()->write(json_encode($book, JSON_PRETTY_PRINT));
-            return $response->withHeader('Content-Type', 'application/json');
+            return new JsonResponse($book, Response::HTTP_OK, [], JSON_PRETTY_PRINT);
         } catch (\RuntimeException $e) {
-            $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(404);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND, [], JSON_PRETTY_PRINT);
         } catch (\InvalidArgumentException $e) {
-            $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(400);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST, [], JSON_PRETTY_PRINT);
         } catch (\Exception $e) {
-            $response->getBody()->write(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
-            return $response
-                ->withHeader('Content-Type', 'application/json')
-                ->withStatus(500);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR, [], JSON_PRETTY_PRINT);
         }
     }
 
-    public function delete(Request $request, Response $response, array $args): Response {
-        $id = (int)$args['id'];
-
+    public function delete(Request $request, int $id): Response {
         $result = $this->bookService->deleteBook($id);
         
-        return $response
-            ->withStatus($result ? 204 : 404);
+        return new Response('', $result ? Response::HTTP_NO_CONTENT : Response::HTTP_NOT_FOUND);
     }
 }
 

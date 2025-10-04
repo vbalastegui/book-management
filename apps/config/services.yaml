@@ -1,0 +1,31 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    BookManagement\:
+        resource: '../../src/*'
+        exclude: '../../src/{Domain,Tests}'
+
+    PDO:
+        factory: ['@BookManagement\Infrastructure\Factory\PDOFactory', 'create']
+
+    BookManagement\Domain\BookRepositoryInterface:
+        class: BookManagement\Infrastructure\SqliteBookRepository
+
+    BookManagement\Application\BookApiServiceInterface:
+        class: BookManagement\Infrastructure\OpenLibraryApiService
+
+    Psr\Log\LoggerInterface:
+        class: Monolog\Logger
+        arguments:
+            $name: 'BookManagement'
+        calls:
+            - pushHandler: ['@monolog.handler']
+
+    monolog.handler:
+        class: Monolog\Handler\StreamHandler
+        arguments:
+            $stream: '/var/www/html/logs/bookservice.log'
+            $level: !php/const Monolog\Logger::INFO
+

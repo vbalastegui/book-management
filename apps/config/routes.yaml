@@ -1,0 +1,25 @@
+books_index:
+    path: /books
+    controller: BookManagement\Infrastructure\Http\BookController::index
+    methods: [GET]
+
+books_show:
+    path: /books/{id}
+    controller: BookManagement\Infrastructure\Http\BookController::show
+    methods: [GET]
+
+books_create:
+    path: /books
+    controller: BookManagement\Infrastructure\Http\BookController::create
+    methods: [POST]
+
+books_update:
+    path: /books/{id}
+    controller: BookManagement\Infrastructure\Http\BookController::update
+    methods: [PUT]
+
+books_delete:
+    path: /books/{id}
+    controller: BookManagement\Infrastructure\Http\BookController::delete
+    methods: [DELETE]
+

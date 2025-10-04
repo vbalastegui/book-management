@@ -8,7 +8,9 @@
         "monolog/monolog": "^2.5",
         "slim/slim": "^4.11",
         "slim/psr7": "^1.6",
-        "php-di/php-di": "^7.0"
+        "php-di/php-di": "^7.0",
+        "symfony/framework-bundle": "^7.3",
+        "symfony/runtime": "^7.3"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5"
@@ -17,7 +19,8 @@
         "psr-4": {
             "BookManagement\\Domain\\": "src/Domain/",
             "BookManagement\\Infrastructure\\": "src/Infrastructure/",
-            "BookManagement\\Application\\": "src/Application/"
+            "BookManagement\\Application\\": "src/Application/",
+            "App\\": "apps/src/"
         }
     },
     "autoload-dev": {
@@ -30,5 +33,10 @@
         "test:acceptance": "phpunit --testsuite 'Acceptance Tests'",
         "test:unit": "phpunit --testsuite 'Unit Tests'",
         "test:integration": "phpunit --testsuite 'Integration Tests'"
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/runtime": true
+        }
     }
 }

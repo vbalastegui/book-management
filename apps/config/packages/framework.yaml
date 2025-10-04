@@ -1,0 +1,6 @@
+framework:
+    secret: '%env(APP_SECRET)%'
+    router:
+        resource: '../routes.yaml'
+    http_method_override: false
+
