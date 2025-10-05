@@ -30,7 +30,7 @@ Thumbs.db
 node_modules/
 
 # PHPUnit
-# Removed .phpunit.result.cache to track it
+.phpunit.result.cache
 /coverage-report/
 coverage.xml
 
