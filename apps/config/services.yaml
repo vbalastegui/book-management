@@ -18,8 +18,39 @@ services:
     BookManagement\Domain\BookRepositoryInterface:
         class: BookManagement\Infrastructure\SqliteBookRepository
 
+    # HTTP Client configuration
+    GuzzleHttp\ClientInterface:
+        class: GuzzleHttp\Client
+        arguments:
+            $config:
+                base_uri: 'https://openlibrary.org/api/books'
+
+    # OpenLibrary Logger
+    openlibrary.logger:
+        class: Monolog\Logger
+        arguments:
+            $name: 'OpenLibraryApiService'
+        calls:
+            - pushHandler: 
+                - '@openlibrary.log_handler'
+
+    openlibrary.log_handler:
+        class: Monolog\Handler\StreamHandler
+        arguments:
+            $stream: '/var/www/html/logs/openlibrary.log'
+            $level: !php/const Monolog\Logger::INFO
+
+    # OpenLibrary Response Parser
+    BookManagement\Application\OpenLibraryResponseParserInterface:
+        class: BookManagement\Infrastructure\OpenLibraryResponseParser
+
+    # OpenLibrary API Service
     BookManagement\Application\BookApiServiceInterface:
         class: BookManagement\Infrastructure\OpenLibraryApiService
+        arguments:
+            $client: '@GuzzleHttp\ClientInterface'
+            $logger: '@openlibrary.logger'
+            $parser: '@BookManagement\Application\OpenLibraryResponseParserInterface'
 
     Psr\Log\LoggerInterface:
         class: Monolog\Logger

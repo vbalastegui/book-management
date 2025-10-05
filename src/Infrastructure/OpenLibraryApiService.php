@@ -3,23 +3,26 @@
 namespace BookManagement\Infrastructure;
 
 use BookManagement\Application\BookApiServiceInterface;
+use BookManagement\Application\OpenLibraryResponseParserInterface;
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LoggerInterface;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
 
 class OpenLibraryApiService implements BookApiServiceInterface {
-    private Client $client;
+    private ClientInterface $client;
     private LoggerInterface $logger;
-    private OpenLibraryResponseParser $parser;
+    private OpenLibraryResponseParserInterface $parser;
     private const BASE_URL = 'https://openlibrary.org/api/books';
 
-    public function __construct(?OpenLibraryResponseParser $parser = null) {
-        $this->client = new Client();
-        $this->logger = new Logger('OpenLibraryApiService');
-        $this->logger->pushHandler(new StreamHandler('/var/www/html/logs/openlibrary.log', Logger::INFO));
-        $this->parser = $parser ?? new OpenLibraryResponseParser();
+    public function __construct(
+        ClientInterface $client, 
+        LoggerInterface $logger, 
+        OpenLibraryResponseParserInterface $parser
+    ) {
+        $this->client = $client;
+        $this->logger = $logger;
+        $this->parser = $parser;
     }
 
     public function fetchBookDetails(string $isbn): ?array {
