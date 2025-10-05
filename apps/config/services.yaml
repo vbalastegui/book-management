@@ -11,6 +11,12 @@ services:
         public: true
         tags: ['controller.service_arguments']
 
+    App\Controller\CreateBookController:
+        public: true
+        tags: ['controller.service_arguments']
+        arguments:
+            $bookService: '@BookManagement\Application\BookService'
+
     PDO:
         class: PDO
         factory: ['@BookManagement\Infrastructure\Factory\PDOFactory', 'create']
