@@ -8,6 +8,8 @@ use BookManagement\Domain\BookRepositoryInterface;
 use BookManagement\Domain\Criteria\Criteria;
 use BookManagement\Domain\Criteria\Filter;
 use BookManagement\Domain\Criteria\FilterOperator;
+use BookManagement\Domain\Criteria\Order;
+use BookManagement\Domain\Criteria\OrderType;
 use Psr\Log\LoggerInterface;
 
 class BookService {
@@ -74,22 +76,64 @@ class BookService {
         return $this->bookRepository->findById($id);
     }
 
-    public function findAllBooks(?int $limit = 100, ?int $offset = 0): array {
-        $criteria = new Criteria([], null, $limit, $offset);
-        return $this->bookRepository->findByCriteria($criteria);
-    }
+    /**
+     * Search books with optional filtering, ordering, and pagination
+     * 
+     * @param array $filters Associative array of field => value filters
+     * @param int|null $limit Maximum number of books to return
+     * @param int|null $offset Number of books to skip
+     * @param string|null $orderBy Field to order by (optional)
+     * @param string|null $orderType Order direction (ASC/DESC, optional)
+     * @return array List of books matching the search criteria
+     */
+    public function searchBooks(
+        array $filters = [], 
+        ?int $limit = 100, 
+        ?int $offset = 0, 
+        ?string $orderBy = null, 
+        ?string $orderType = null
+    ): array {
+        // Convert input filters to Domain Filter objects
+        $domainFilters = array_map(function($field, $value) {
+            // Handle more complex filter scenarios
+            if (is_array($value)) {
+                // If value is an array, assume it's a comparison
+                $operator = key($value);
+                $filterValue = current($value);
+                
+                // Map comparison operators
+                $operatorMap = [
+                    '=' => FilterOperator::EQUAL,
+                    '>' => FilterOperator::GREATER_THAN,
+                    '<' => FilterOperator::LESS_THAN,
+                    '>=' => FilterOperator::GREATER_THAN_OR_EQUAL,
+                    '<=' => FilterOperator::LESS_THAN_OR_EQUAL,
+                    'LIKE' => FilterOperator::CONTAINS
+                ];
+                
+                $mappedOperator = $operatorMap[$operator] ?? FilterOperator::CONTAINS;
+                return new Filter($field, $mappedOperator, $filterValue);
+            }
+            
+            // Default to CONTAINS for string fields, EQUAL for others
+            $operator = is_string($value) 
+                ? FilterOperator::CONTAINS 
+                : FilterOperator::EQUAL;
+            
+            return new Filter($field, $operator, $value);
+        }, array_keys($filters), $filters);
 
-    public function searchBooksByTitle(string $title): array {
-        $criteria = new Criteria([
-            new Filter('title', FilterOperator::CONTAINS, $title)
-        ]);
-        return $this->bookRepository->findByCriteria($criteria);
-    }
+        // Create order if specified
+        $order = null;
+        if ($orderBy !== null) {
+            $orderType = $orderType ?? 'ASC';
+            $order = new Order($orderBy, OrderType::from(strtoupper($orderType)));
+        }
 
-    public function searchBooksByAuthor(string $author): array {
-        $criteria = new Criteria([
-            new Filter('author', FilterOperator::CONTAINS, $author)
-        ]);
+        // Create criteria with filters, optional order, and pagination
+        $criteria = new Criteria($domainFilters, $order, $limit, $offset);
+
+        // Perform search
         return $this->bookRepository->findByCriteria($criteria);
     }
 }
