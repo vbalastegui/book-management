@@ -58,3 +58,7 @@ node_modules/
 *.ori
 *.orig
 *.tmp
+
+# Code Coverage
+coverage-report/
+coverage.xml

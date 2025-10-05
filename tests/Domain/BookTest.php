@@ -3,6 +3,7 @@
 namespace BookManagement\Tests\Domain;
 
 use BookManagement\Domain\Book;
+use BookManagement\Domain\BookIsbn;
 use PHPUnit\Framework\TestCase;
 
 class BookTest extends TestCase {
@@ -12,7 +13,7 @@ class BookTest extends TestCase {
             1,
             'Clean Code',
             'Robert C. Martin',
-            '0132350882',
+            new BookIsbn('0132350882'),
             2008,
             'A handbook of agile software craftsmanship'
         );
@@ -20,7 +21,7 @@ class BookTest extends TestCase {
         $this->assertEquals(1, $book->getId());
         $this->assertEquals('Clean Code', $book->getTitle());
         $this->assertEquals('Robert C. Martin', $book->getAuthor());
-        $this->assertEquals('0132350882', $book->getIsbn());
+        $this->assertEquals('0132350882', $book->getIsbn()->value());
         $this->assertEquals(2008, $book->getPublicationYear());
         $this->assertEquals('A handbook of agile software craftsmanship', $book->getDescription());
     }
@@ -31,11 +32,16 @@ class BookTest extends TestCase {
             null,
             'Clean Code',
             'Robert C. Martin',
-            '0132350882',
+            new BookIsbn('0132350882'),
             2008
         );
 
         $this->assertNull($book->getId());
+        $this->assertEquals('Clean Code', $book->getTitle());
+        $this->assertEquals('Robert C. Martin', $book->getAuthor());
+        $this->assertEquals('0132350882', $book->getIsbn()->value());
+        $this->assertEquals(2008, $book->getPublicationYear());
+        $this->assertNull($book->getDescription());
     }
 
     /** @test */
@@ -44,10 +50,15 @@ class BookTest extends TestCase {
             1,
             'Clean Code',
             'Robert C. Martin',
-            '0132350882',
+            new BookIsbn('0132350882'),
             2008
         );
 
+        $this->assertEquals(1, $book->getId());
+        $this->assertEquals('Clean Code', $book->getTitle());
+        $this->assertEquals('Robert C. Martin', $book->getAuthor());
+        $this->assertEquals('0132350882', $book->getIsbn()->value());
+        $this->assertEquals(2008, $book->getPublicationYear());
         $this->assertNull($book->getDescription());
     }
 
@@ -57,21 +68,21 @@ class BookTest extends TestCase {
             1,
             'Clean Code',
             'Robert C. Martin',
-            '0132350882',
+            new BookIsbn('0132350882'),
             2008,
-            'Description'
+            'A handbook of agile software craftsmanship'
         );
 
-        $expected = [
+        $expectedArray = [
             'id' => 1,
             'title' => 'Clean Code',
             'author' => 'Robert C. Martin',
             'isbn' => '0132350882',
             'publication_year' => 2008,
-            'description' => 'Description'
+            'description' => 'A handbook of agile software craftsmanship'
         ];
 
-        $this->assertEquals($expected, $book->toArray());
+        $this->assertEquals($expectedArray, $book->toArray());
     }
 
     /** @test */
@@ -80,17 +91,21 @@ class BookTest extends TestCase {
             1,
             'Clean Code',
             'Robert C. Martin',
-            '0132350882',
+            new BookIsbn('0132350882'),
             2008,
-            'Description'
+            'A handbook of agile software craftsmanship'
         );
 
-        $json = json_encode($book);
-        $decoded = json_decode($json, true);
+        $expectedJson = json_encode([
+            'id' => 1,
+            'title' => 'Clean Code',
+            'author' => 'Robert C. Martin',
+            'isbn' => '0132350882',
+            'publication_year' => 2008,
+            'description' => 'A handbook of agile software craftsmanship'
+        ]);
 
-        $this->assertEquals(1, $decoded['id']);
-        $this->assertEquals('Clean Code', $decoded['title']);
-        $this->assertEquals('Robert C. Martin', $decoded['author']);
+        $this->assertEquals($expectedJson, json_encode($book->toArray()));
     }
 }
 
