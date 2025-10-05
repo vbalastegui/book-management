@@ -501,4 +501,212 @@ class BookServiceTest extends TestCase {
         // Verify results
         $this->assertCount(1, $results);
     }
+
+    /** @test */
+    public function creating_book_with_api_details_works_correctly(): void {
+        // Prepare book data
+        $bookData = [
+            'title' => 'Clean Code',
+            'author' => 'Robert C. Martin',
+            'isbn' => '0132350882',
+            'publication_year' => 2008
+        ];
+
+        // Mock API service to return book details
+        $this->apiServiceMock
+            ->expects($this->once())
+            ->method('fetchBookDetails')
+            ->with('0132350882')
+            ->willReturn([
+                'description' => 'A handbook of software craftsmanship'
+            ]);
+
+        // Mock repository to capture created book
+        $this->bookRepositoryMock
+            ->expects($this->once())
+            ->method('create')
+            ->with($this->callback(function(Book $book) {
+                $this->assertEquals('Clean Code', $book->getTitle());
+                $this->assertEquals('Robert C. Martin', $book->getAuthor());
+                $this->assertEquals('0132350882', $book->getIsbn()->value());
+                $this->assertEquals(2008, $book->getPublicationYear());
+                $this->assertEquals('A handbook of software craftsmanship', $book->getDescription());
+                return true;
+            }))
+            ->willReturnCallback(function(Book $book) {
+                // Simulate repository assigning an ID
+                return new Book(
+                    1,
+                    $book->getTitle(),
+                    $book->getAuthor(),
+                    $book->getIsbn(),
+                    $book->getPublicationYear(),
+                    $book->getDescription()
+                );
+            });
+
+        // Mock logger to verify logging
+        $this->loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with('Creating book: Clean Code');
+
+        // Create book
+        $createdBook = $this->bookService->createBook($bookData);
+
+        // Verify book creation
+        $this->assertEquals(1, $createdBook->getId());
+        $this->assertEquals('Clean Code', $createdBook->getTitle());
+    }
+
+    /** @test */
+    public function updating_book_works_correctly(): void {
+        // Prepare existing book
+        $existingBook = new Book(
+            1,
+            'Old Title',
+            'Old Author',
+            new BookIsbn('1234567890'),
+            2000
+        );
+
+        // Prepare update data
+        $updateData = [
+            'title' => 'Updated Title',
+            'author' => 'Updated Author',
+            'isbn' => '0987654321',
+            'publication_year' => 2022
+        ];
+
+        // Mock repository to find existing book
+        $this->bookRepositoryMock
+            ->expects($this->once())
+            ->method('findById')
+            ->with(1)
+            ->willReturn($existingBook);
+
+        // Mock repository to update book
+        $this->bookRepositoryMock
+            ->expects($this->once())
+            ->method('update')
+            ->with($this->callback(function(Book $book) {
+                $this->assertEquals(1, $book->getId());
+                $this->assertEquals('Updated Title', $book->getTitle());
+                $this->assertEquals('Updated Author', $book->getAuthor());
+                $this->assertEquals('0987654321', $book->getIsbn()->value());
+                $this->assertEquals(2022, $book->getPublicationYear());
+                return true;
+            }))
+            ->willReturnCallback(function(Book $book) {
+                return $book;
+            });
+
+        // Mock logger to verify logging
+        $this->loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with('Updating book: Updated Title');
+
+        // Update book
+        $updatedBook = $this->bookService->updateBook(1, $updateData);
+
+        // Verify book update
+        $this->assertEquals('Updated Title', $updatedBook->getTitle());
+        $this->assertEquals('Updated Author', $updatedBook->getAuthor());
+    }
+
+    /** @test */
+    public function updating_book_with_partial_data_works_correctly(): void {
+        // Prepare existing book
+        $existingBook = new Book(
+            1,
+            'Old Title',
+            'Old Author',
+            new BookIsbn('1234567890'),
+            2000
+        );
+
+        // Prepare partial update data
+        $updateData = [
+            'title' => 'Updated Title'
+        ];
+
+        // Mock repository to find existing book
+        $this->bookRepositoryMock
+            ->expects($this->once())
+            ->method('findById')
+            ->with(1)
+            ->willReturn($existingBook);
+
+        // Mock repository to update book
+        $this->bookRepositoryMock
+            ->expects($this->once())
+            ->method('update')
+            ->with($this->callback(function(Book $book) {
+                $this->assertEquals(1, $book->getId());
+                $this->assertEquals('Updated Title', $book->getTitle());
+                $this->assertEquals('Old Author', $book->getAuthor());
+                $this->assertEquals('1234567890', $book->getIsbn()->value());
+                $this->assertEquals(2000, $book->getPublicationYear());
+                return true;
+            }))
+            ->willReturnCallback(function(Book $book) {
+                return $book;
+            });
+
+        // Update book
+        $updatedBook = $this->bookService->updateBook(1, $updateData);
+
+        // Verify book update
+        $this->assertEquals('Updated Title', $updatedBook->getTitle());
+        $this->assertEquals('Old Author', $updatedBook->getAuthor());
+    }
+
+    /** @test */
+    public function deleting_book_works_correctly(): void {
+        // Mock repository to delete book
+        $this->bookRepositoryMock
+            ->expects($this->once())
+            ->method('delete')
+            ->with(1)
+            ->willReturn(true);
+
+        // Mock logger to verify logging
+        $this->loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with('Deleting book with ID: 1');
+
+        // Delete book
+        $result = $this->bookService->deleteBook(1);
+
+        // Verify deletion
+        $this->assertTrue($result);
+    }
+
+    /** @test */
+    public function finding_book_by_id_works_correctly(): void {
+        // Prepare book
+        $book = new Book(
+            1,
+            'Clean Code',
+            'Robert C. Martin',
+            new BookIsbn('0132350882'),
+            2008
+        );
+
+        // Mock repository to find book
+        $this->bookRepositoryMock
+            ->expects($this->once())
+            ->method('findById')
+            ->with(1)
+            ->willReturn($book);
+
+        // Find book
+        $foundBook = $this->bookService->findBookById(1);
+
+        // Verify found book
+        $this->assertNotNull($foundBook);
+        $this->assertEquals('Clean Code', $foundBook->getTitle());
+    }
 }
