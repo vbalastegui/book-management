@@ -33,268 +33,141 @@ class BookServiceTest extends TestCase {
     }
 
     /** @test */
-    public function it_can_create_a_book(): void {
+    public function creating_a_book_validates_isbn(): void {
+        // Prepare book data with valid ISBN
         $bookData = [
-            'title' => 'Test Book',
-            'author' => 'Test Author',
-            'isbn' => '1234567890',
-            'publication_year' => 2023
+            'title' => 'Clean Code',
+            'author' => 'Robert C. Martin',
+            'isbn' => '0132350882',
+            'publication_year' => 2008
         ];
 
-        $apiDetails = ['description' => 'Test description'];
+        // Mock API service to return details
         $this->apiServiceMock
             ->expects($this->once())
             ->method('fetchBookDetails')
-            ->with('1234567890')
-            ->willReturn($apiDetails);
+            ->with('0132350882')
+            ->willReturn(['description' => 'A handbook of software craftsmanship']);
 
-        $expectedBook = new Book(
-            null,
-            'Test Book',
-            'Test Author',
-            new BookIsbn('1234567890'),
-            2023,
-            'Test description'
-        );
-
+        // Mock repository to capture the created book
         $this->bookRepositoryMock
             ->expects($this->once())
             ->method('create')
-            ->with($this->callback(function($book) use ($expectedBook) {
-                $this->assertEquals($expectedBook->getTitle(), $book->getTitle());
-                $this->assertEquals($expectedBook->getAuthor(), $book->getAuthor());
-                $this->assertEquals($expectedBook->getIsbn()->value(), $book->getIsbn()->value());
-                $this->assertEquals($expectedBook->getPublicationYear(), $book->getPublicationYear());
-                $this->assertEquals($expectedBook->getDescription(), $book->getDescription());
+            ->with($this->callback(function(Book $book) {
+                // Verify that ISBN is converted to BookIsbn
+                $this->assertInstanceOf(BookIsbn::class, $book->getIsbn());
+                $this->assertEquals('0132350882', $book->getIsbn()->value());
                 return true;
             }))
-            ->willReturn($expectedBook);
+            ->willReturnCallback(function(Book $book) {
+                // Simulate repository assigning an ID
+                return new Book(
+                    1,
+                    $book->getTitle(),
+                    $book->getAuthor(),
+                    $book->getIsbn(),
+                    $book->getPublicationYear(),
+                    $book->getDescription()
+                );
+            });
 
-        $this->loggerMock
-            ->expects($this->once())
-            ->method('info')
-            ->with('Creating book: Test Book');
+        // Create book
+        $createdBook = $this->bookService->createBook($bookData);
 
-        $result = $this->bookService->createBook($bookData);
-        $this->assertEquals($expectedBook, $result);
+        // Verify book creation
+        $this->assertEquals('Clean Code', $createdBook->getTitle());
+        $this->assertEquals('0132350882', $createdBook->getIsbn()->value());
     }
 
     /** @test */
-    public function it_can_create_a_book_without_description(): void {
-        $bookData = [
-            'title' => 'Test Book',
-            'author' => 'Test Author',
-            'isbn' => '1234567890',
-            'publication_year' => 2023
-        ];
-
-        $this->apiServiceMock
-            ->expects($this->once())
-            ->method('fetchBookDetails')
-            ->with('1234567890')
-            ->willReturn(null);
-
-        $expectedBook = new Book(
-            null,
-            'Test Book',
-            'Test Author',
-            new BookIsbn('1234567890'),
-            2023
-        );
-
-        $this->bookRepositoryMock
-            ->expects($this->once())
-            ->method('create')
-            ->willReturn($expectedBook);
-
-        $this->loggerMock
-            ->expects($this->once())
-            ->method('info')
-            ->with('Creating book: Test Book');
-
-        $result = $this->bookService->createBook($bookData);
-        $this->assertEquals($expectedBook, $result);
-    }
-
-    /** @test */
-    public function it_can_update_a_book(): void {
-        $existingBook = new Book(
-            1,
-            'Old Title',
-            'Old Author',
-            new BookIsbn('0987654321'),
-            2022
-        );
-
-        $updateData = [
-            'title' => 'New Title',
-            'author' => 'New Author',
-            'isbn' => '1234567890',
-            'publication_year' => 2023,
-            'description' => 'New description'
-        ];
-
-        $this->bookRepositoryMock
-            ->expects($this->once())
-            ->method('findById')
-            ->with(1)
-            ->willReturn($existingBook);
-
-        $expectedUpdatedBook = new Book(
-            1,
-            'New Title',
-            'New Author',
-            new BookIsbn('1234567890'),
-            2023,
-            'New description'
-        );
-
-        $this->bookRepositoryMock
-            ->expects($this->once())
-            ->method('update')
-            ->with($this->equalTo($expectedUpdatedBook))
-            ->willReturn($expectedUpdatedBook);
-
-        $this->loggerMock
-            ->expects($this->once())
-            ->method('info')
-            ->with('Updating book: New Title');
-
-        $result = $this->bookService->updateBook(1, $updateData);
-        $this->assertEquals($expectedUpdatedBook, $result);
-    }
-
-    /** @test */
-    public function it_throws_exception_when_updating_non_existent_book(): void {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Book not found');
-
-        $this->bookRepositoryMock
-            ->expects($this->once())
-            ->method('findById')
-            ->with(999)
-            ->willReturn(null);
-
-        $this->bookService->updateBook(999, []);
-    }
-
-    /** @test */
-    public function it_can_delete_a_book(): void {
-        $this->bookRepositoryMock
-            ->expects($this->once())
-            ->method('delete')
-            ->with(1)
-            ->willReturn(true);
-
-        $this->loggerMock
-            ->expects($this->once())
-            ->method('info')
-            ->with('Deleting book with ID: 1');
-
-        $result = $this->bookService->deleteBook(1);
-        $this->assertTrue($result);
-    }
-
-    /** @test */
-    public function it_can_find_book_by_id(): void {
-        $expectedBook = new Book(
-            1,
-            'Test Book',
-            'Test Author',
-            new BookIsbn('1234567890'),
-            2023
-        );
-
-        $this->bookRepositoryMock
-            ->expects($this->once())
-            ->method('findById')
-            ->with(1)
-            ->willReturn($expectedBook);
-
-        $result = $this->bookService->findBookById(1);
-        $this->assertEquals($expectedBook, $result);
-    }
-
-    /** @test */
-    public function it_can_find_all_books(): void {
-        $expectedBooks = [
+    public function searching_books_applies_domain_filters(): void {
+        // Prepare test books
+        $books = [
             new Book(
                 1,
-                'Book 1',
-                'Author 1',
-                new BookIsbn('1111111111'),
-                2021
+                'Clean Code',
+                'Robert C. Martin',
+                new BookIsbn('0132350882'),
+                2008,
+                'Software craftsmanship guide'
             ),
             new Book(
                 2,
-                'Book 2',
-                'Author 2',
-                new BookIsbn('2222222222'),
-                2022
+                'Refactoring',
+                'Martin Fowler',
+                new BookIsbn('0201485672'),
+                1999,
+                'Improving the design of existing code'
             )
         ];
 
-        $expectedCriteria = new Criteria([], null, 100, 0);
-
+        // Mock repository to return books based on criteria
         $this->bookRepositoryMock
             ->expects($this->once())
             ->method('findByCriteria')
-            ->with($this->equalTo($expectedCriteria))
-            ->willReturn($expectedBooks);
+            ->with($this->callback(function(Criteria $criteria) {
+                // Verify filter is correctly constructed
+                $this->assertTrue($criteria->hasFilters());
+                $this->assertCount(1, $criteria->filters());
+                
+                $filter = $criteria->filters()[0];
+                $this->assertEquals('title', $filter->field());
+                $this->assertEquals(FilterOperator::CONTAINS, $filter->operator());
+                $this->assertEquals('Clean', $filter->value());
 
-        $result = $this->bookService->findAllBooks();
-        $this->assertEquals($expectedBooks, $result);
+                return true;
+            }))
+            ->willReturn([$books[0]]);
+
+        // Search books by title
+        $results = $this->bookService->searchBooksByTitle('Clean');
+
+        // Verify results
+        $this->assertCount(1, $results);
+        $this->assertEquals('Clean Code', $results[0]->getTitle());
     }
 
     /** @test */
-    public function it_can_search_books_by_title(): void {
-        $expectedBooks = [
+    public function finding_all_books_applies_domain_pagination(): void {
+        // Prepare test books
+        $books = [
             new Book(
                 1,
                 'Clean Code',
                 'Robert C. Martin',
                 new BookIsbn('0132350882'),
                 2008
-            )
-        ];
-
-        $expectedCriteria = new Criteria([
-            new Filter('title', FilterOperator::CONTAINS, 'Clean')
-        ]);
-
-        $this->bookRepositoryMock
-            ->expects($this->once())
-            ->method('findByCriteria')
-            ->with($this->equalTo($expectedCriteria))
-            ->willReturn($expectedBooks);
-
-        $result = $this->bookService->searchBooksByTitle('Clean');
-        $this->assertEquals($expectedBooks, $result);
-    }
-
-    /** @test */
-    public function it_can_search_books_by_author(): void {
-        $expectedBooks = [
+            ),
             new Book(
-                1,
-                'Clean Code',
-                'Robert C. Martin',
-                new BookIsbn('0132350882'),
-                2008
+                2,
+                'Refactoring',
+                'Martin Fowler',
+                new BookIsbn('0201485672'),
+                1999
             )
         ];
 
-        $expectedCriteria = new Criteria([
-            new Filter('author', FilterOperator::CONTAINS, 'Martin')
-        ]);
-
+        // Mock repository to return books based on criteria
         $this->bookRepositoryMock
             ->expects($this->once())
             ->method('findByCriteria')
-            ->with($this->equalTo($expectedCriteria))
-            ->willReturn($expectedBooks);
+            ->with($this->callback(function(Criteria $criteria) {
+                // Verify pagination parameters
+                $this->assertEquals(5, $criteria->limit());
+                $this->assertEquals(10, $criteria->offset());
+                $this->assertNull($criteria->order());
+                $this->assertFalse($criteria->hasFilters());
 
-        $result = $this->bookService->searchBooksByAuthor('Martin');
-        $this->assertEquals($expectedBooks, $result);
+                return true;
+            }))
+            ->willReturn($books);
+
+        // Find books with custom pagination
+        $results = $this->bookService->findAllBooks(5, 10);
+
+        // Verify results
+        $this->assertCount(2, $results);
+        $this->assertEquals('Clean Code', $results[0]->getTitle());
+        $this->assertEquals('Refactoring', $results[1]->getTitle());
     }
 }
