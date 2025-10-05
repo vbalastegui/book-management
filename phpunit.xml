@@ -10,6 +10,7 @@
         </testsuite>
         <testsuite name="Application">
             <directory>tests/Application</directory>
+            <directory>tests/Domain</directory>
         </testsuite>
         <testsuite name="Acceptance">
             <directory>tests/Acceptance</directory>
