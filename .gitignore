@@ -30,8 +30,9 @@ Thumbs.db
 node_modules/
 
 # PHPUnit
-/phpunit.xml
-.phpunit.result.cache
+# Removed .phpunit.result.cache to track it
+/coverage-report/
+coverage.xml
 
 # Symfony
 /var/
@@ -58,7 +59,3 @@ node_modules/
 *.ori
 *.orig
 *.tmp
-
-# Code Coverage
-coverage-report/
-coverage.xml
