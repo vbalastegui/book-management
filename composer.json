@@ -31,10 +31,7 @@
         }
     },
     "scripts": {
-        "test": "phpunit",
-        "test:acceptance": "phpunit --testsuite 'Acceptance Tests'",
-        "test:unit": "phpunit --testsuite 'Unit Tests'",
-        "test:integration": "phpunit --testsuite 'Integration Tests'"
+        "test:acceptance": "phpunit --testsuite 'Acceptance'"
     },
     "config": {
         "allow-plugins": {

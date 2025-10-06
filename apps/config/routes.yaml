@@ -15,7 +15,7 @@ api_books_show:
 api_books_create:
     path: /books
     methods: [POST]
-    controller: App\Controller\BookController::create
+    controller: App\Controller\CreateBookController
 
 api_books_update:
     path: /books/{id}
